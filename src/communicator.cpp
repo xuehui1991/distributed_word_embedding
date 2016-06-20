@@ -104,10 +104,10 @@ namespace multiverso
 
 		inline void Communicator::SetDataBlockEmbedding(DataBlock *data_block,
 			std::vector<real*> &blocks, std::vector<int> &nodes,
-			std::function<void(int, real*)> get_function)
+			std::function<void(int, real*)> set_function)
 		{
 			for (int i = 0; i < nodes.size(); ++i){
-				get_function(nodes[i], blocks[i]);
+				set_function(nodes[i], blocks[i]);
 			}
 		}
 
