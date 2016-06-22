@@ -24,7 +24,6 @@ namespace multiverso
 		public:
 			std::unordered_set <int> input_nodes, output_nodes;
 			std::unordered_set <int> negativesample_pools;
-			//std::vector<int> negativesample_pools;
 
 			DataBlock(){}
 			~DataBlock();

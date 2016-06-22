@@ -24,8 +24,8 @@ namespace multiverso
 
 		Trainer::~Trainer()
 		{
-			delete hidden_act_;
-			delete hidden_err_;
+			free(hidden_act_);
+			free(hidden_err_);
 		}
 
 		void Trainer::TrainIteration(DataBlock *data_block)

@@ -28,11 +28,9 @@ namespace multiverso
 		const int kMaxCodeLength = 100;
 		const int kMaxString = 100;
 		const int kMaxSentenceLength = 1000;
-		const int kMaxEXP = 6;
-
-		const int kExpTableSize = 1000;
 		const int kMaxExp = 6;
 
+		const int kExpTableSize = 1000;
 		const int kSaveBatch = 100000;
 	}
 }

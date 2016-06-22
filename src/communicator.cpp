@@ -21,7 +21,7 @@ namespace multiverso
 		void Communicator::PrepareParameterTables(int row_size, int column_size){
 			worker_input_table_ = new MatrixWorkerTable<real>(row_size, column_size);
 			worker_output_table_ = new MatrixWorkerTable<real>(row_size, column_size);
-			server_input_table_ = new MatrixServerTable<real>(row_size, column_size, -0.5 / embedding_size, 0.5 / embedding_size);
+			server_input_table_ = new MatrixServerTable<real>(row_size, column_size, -0.5f/ embedding_size,0.5f/ embedding_size);
 			server_output_table_ = new MatrixServerTable<real>(row_size, column_size);
 
 			worker_wordcount_table_ = new KVWorkerTable<int, int64>();

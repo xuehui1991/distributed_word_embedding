@@ -6,8 +6,7 @@ namespace multiverso
 	{
 		HuffmanEncoder::HuffmanEncoder()
 		{
-			dict_ = nullptr;						
-			//multiverso::Log::Info("ignore super long term");
+			dict_ = nullptr;
 		}
 
 		//Save the word-huffmancode pair in file

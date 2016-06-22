@@ -10,6 +10,7 @@
 #include <random>
 #include <cassert>
 #include <sys/stat.h>
+#include <time.h>
 
 #include "constant.h"
 #include "dictionary.h"
