@@ -6,7 +6,8 @@ cd multiverso
 cd third_party
 sh install.sh
 cd ..
-make -j4 all
+cmake CMakeLists.txt
+make
 
 cd ..
-make -j4
+make
