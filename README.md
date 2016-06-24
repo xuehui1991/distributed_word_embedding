@@ -16,4 +16,3 @@ Run ```$./build.sh``` to build the project.
 
 For windows users, please refer to README in windows folder.
 
-(https://github.com/Microsoft/multiverso/wiki/Word-Embedding)
