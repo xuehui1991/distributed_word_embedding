@@ -19,6 +19,7 @@
 #include "trainer.h"
 #include "block_queue.h"
 #include "communicator.h"
+#include "client.h"
 
 namespace multiverso
 {
@@ -55,6 +56,12 @@ namespace multiverso
 			Communicator* communicator_=nullptr;
 			MemoryManager* memory_mamanger_ = nullptr;
 
+			std::string identity_;
+			std::vector<char*> broker_point_;
+			char* local_point_ = nullptr;
+			std::vector<int> broker_port_;
+			int local_port_ = 0;
+
 			/*!
 			* \brief Load Dictionary from the vocabulary_file
 			* \param opt Some model-set setparams
@@ -84,8 +91,13 @@ namespace multiverso
 			DataBlock* GetBlockAndPrepareParameter();
 
 			void SaveEmbedding(const char *file_path, bool is_binary);
-			void WriteToFile(bool is_binary, std::vector<real*> &blocks, FILE* fid);
+
 			const char* ChangeFileName(const char *file_path, int iteration);
+			void WriteToFile(bool is_binary, std::vector<real*> &blocks, FILE* fid, std::vector<int> &nodes);
+			void GetMachineFileAuto();
+			void ParseAeitherSetting(int argc, char *argv[]);
+			void MakeBrokerAddress();
+			void PrintParameter(int argc, char *argv[]);
 		};
 	}
 }

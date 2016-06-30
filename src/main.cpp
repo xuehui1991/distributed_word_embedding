@@ -2,6 +2,7 @@
 #include <thread>
 #include <string>
 #include <new>
+#include <omp.h>
 
 #include "multiverso/util/log.h"
 #include "multiverso/multiverso.h"
@@ -20,6 +21,7 @@ int main(int argc, char *argv[])
 	{
 		Distributed_wordembedding *ptr = new (std::nothrow)Distributed_wordembedding();
 		assert(ptr != nullptr);
+
 		ptr->Run(argc, argv);
 		delete ptr;
 	}

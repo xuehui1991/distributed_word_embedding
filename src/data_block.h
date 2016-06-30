@@ -63,7 +63,7 @@ namespace multiverso
 
 			void ClearParameters();
 
-			void MallocMemory(int dictionary_size_, bool is_use_adagrad);
+			void MallocMemory(int dictionary_size, bool is_use_adagrad);
 
 			void  SetWeightIE(int input_node_id, real* ptr);
 			void  SetWeightEO(int output_node_id, real* ptr);

@@ -46,6 +46,7 @@ namespace multiverso
 			WordEmbedding_->Train(data_block, trainer_id_, option_->thread_cnt,
 				word_count, hidden_act_, hidden_err_);
 
+			/*
 			if (word_count > last_word_count)
 			{
 				multiverso::Log::Info("Rank %d TrainNNSpeed: Words/thread/second %lfk\n",
@@ -53,7 +54,7 @@ namespace multiverso
 					(static_cast<double>(word_count) - last_word_count) /
 					(clock() - start) * static_cast<double>(CLOCKS_PER_SEC) / 1000);
 			}
-
+			*/
 			multiverso::Log::Debug("Rank %d Trainer %d training time:%lfs\n",process_id_,trainer_id_,
 				(clock() - start) / static_cast<double>(CLOCKS_PER_SEC));
 			train_count_++;

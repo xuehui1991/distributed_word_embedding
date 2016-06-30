@@ -35,7 +35,8 @@ namespace multiverso
 			int64 total_words;
 			int64 max_preload_data_size;
 			real init_learning_rate;
-			int num_servers, num_aggregator, lock_option, num_lock, max_delay;
+			int server_num;
+			char *broker_address;
 
 			Option();
 			/*!
@@ -75,6 +76,7 @@ namespace multiverso
 		std::string GetSystemTime();
 		int64 GetFileSize(const char *filename);
 		bool ReadWord(char *word, FILE *fin);
+		void split(std::vector<char *> &result,char *text, const char* splitt_symbol);
 
 		void InitExpTable();
 		extern std::string g_log_suffix;

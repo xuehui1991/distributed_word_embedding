@@ -38,7 +38,6 @@ namespace multiverso
 		//start the load data thread
 		void Distributed_wordembedding::StartLoadDataThread(Reader *reader, int64 file_size)
 		{
-			int data_block_count = 0;
 			int64 all = file_size / option_->data_block_size + 1;
 			for (int cur_epoch = 0; cur_epoch < option_->epoch; ++cur_epoch)
 			{
@@ -48,8 +47,8 @@ namespace multiverso
 					DataBlock *data_block = new (std::nothrow)DataBlock();
 					assert(data_block != nullptr);
 					LoadOneBlock(data_block, reader, option_->data_block_size);
-					data_block_count++;
 
+					//push into datablock queue
 					std::unique_lock<std::mutex> lock(block_queue_->mtx);
 					(block_queue_->queues).push(data_block);
 					(block_queue_->repo_not_empty).notify_all();
@@ -106,19 +105,19 @@ namespace multiverso
 		void Distributed_wordembedding::GetAllWordCount(){
 			WordEmbedding_->word_count_actual = communicator_->GetWordCount();
 			WordEmbedding_->UpdateLearningRate();
-			multiverso::Log::Info("Get all word count done.,word count actual is %lld\n", WordEmbedding_->word_count_actual);
+			multiverso::Log::Info("Get all word count done,word count actual is %lld\n", WordEmbedding_->word_count_actual);
 		}
 
 		void Distributed_wordembedding::AddDeltaWordCount(){
 			int64 temp_word_count = communicator_->GetWordCount();
 			temp_word_count = WordEmbedding_->word_count_actual - temp_word_count;
 			communicator_->AddWordCount(temp_word_count);
-			multiverso::Log::Info("Add word count done.word count delta is %lld\n", WordEmbedding_->word_count_actual);
+			multiverso::Log::Info("Add word count done.word count delta is %lld\n", temp_word_count);
 		}
 
 		void Distributed_wordembedding::StartWordCount()
 		{
-			multiverso::Log::Info("Rank %d Start word count thread",process_id_);
+			multiverso::Log::Info("Rank %d Start word count thread.\n",process_id_);
 			int64 total_word_count = 0, sum = 0;
 			while (is_running_)
 			{
@@ -223,7 +222,7 @@ namespace multiverso
 							(clock() - start_block) / static_cast<double>(CLOCKS_PER_SEC));
 
 						communicator_->AddDeltaParameter(data_block);
-						AddDeltaWordCount();
+						//AddDeltaWordCount();
 						delete data_block;
 
 						data_block = GetBlockAndPrepareParameter();
@@ -245,7 +244,7 @@ namespace multiverso
 							(clock() - start_block) / static_cast<double>(CLOCKS_PER_SEC));
 
 						communicator_->AddDeltaParameter(data_block);
-						AddDeltaWordCount();
+						//AddDeltaWordCount();
 						delete data_block;
 
 						data_block = next_block;
@@ -256,15 +255,18 @@ namespace multiverso
 						(clock() - start_block) / static_cast<double>(CLOCKS_PER_SEC));
 				}
 
-				multiverso::Log::Info("Rank %d Dealing %d epoch time:%lfs\n", process_id_, cur_epoch,
+				multiverso::Log::Info("Rank %d Dealing %d epoch time:%lfs.\n", process_id_, cur_epoch,
 					(clock() - start_epoch) / static_cast<double>(CLOCKS_PER_SEC));
 				
 				if (cur_epoch == option_->epoch - 1)
 				{
 					MV_Barrier();
+					/*
 					if (process_id_ == 0){
 						SaveEmbedding(option_->output_file, option_->output_binary);
 					}
+					*/
+					SaveEmbedding(option_->output_file, option_->output_binary);
 				}
 			}
 
@@ -292,7 +294,7 @@ namespace multiverso
 		}
 
 		void Distributed_wordembedding::SaveEmbedding(const char *file_path, bool is_binary){
-			multiverso::Log::Info("Rank %d Begin to Save Embedding.s\n",process_id_);
+			multiverso::Log::Info("Rank %d Begin to Save Embeddings.\n",process_id_);
 
 			clock_t start = clock();
 			int epoch = dictionary_->Size() / kSaveBatch;
@@ -304,29 +306,32 @@ namespace multiverso
 			FILE* fid = (is_binary == true) ? fid = fopen(file_path, "wb") : fid = fopen(file_path, "wt");
 			fprintf(fid, "%d %d\n", dictionary_->Size(), option_->embeding_size);
 
-			for (int i = 0; i < epoch; ++i){
-				for (int j = 0; j < kSaveBatch; ++j){
-					nodes.push_back(base + j);
+			if (process_id_ == 0)
+			{
+				for (int i = 0; i < epoch; ++i){
+					for (int j = 0; j < kSaveBatch; ++j){
+						nodes.push_back(base + j);
+					}
+
+					memory_mamanger_->RequestBlocks(kSaveBatch, blocks);
+					communicator_->GetWorkerTableRows(nodes, blocks, option_->embeding_size);
+					WriteToFile(is_binary, blocks, fid, nodes);
+					memory_mamanger_->ReturnBlocks(blocks);
+
+					blocks.clear();
+					nodes.clear();
+					base = (i + 1)*kSaveBatch;
 				}
 
-				memory_mamanger_->RequestBlocks(kSaveBatch, blocks);
-				communicator_->GetWorkerTableRows(nodes, blocks,option_->embeding_size);
-				WriteToFile(is_binary, blocks,fid);
-				memory_mamanger_->ReturnBlocks(blocks);
-
-				blocks.clear();
-				nodes.clear();
-				base = (i + 1)*kSaveBatch;
-			}
-
-			if (left > 0){
-				for (int j = 0; j <left; ++j){
-					nodes.push_back(base + j);
+				if (left > 0){
+					for (int j = 0; j <left; ++j){
+						nodes.push_back(base + j);
+					}
+					memory_mamanger_->RequestBlocks(left, blocks);
+					communicator_->GetWorkerTableRows(nodes, blocks, option_->embeding_size);
+					WriteToFile(is_binary, blocks, fid, nodes);
+					memory_mamanger_->ReturnBlocks(blocks);
 				}
-				memory_mamanger_->RequestBlocks(left, blocks);
-				communicator_->GetWorkerTableRows(nodes, blocks, option_->embeding_size);
-				WriteToFile(is_binary, blocks, fid);
-				memory_mamanger_->ReturnBlocks(blocks);
 			}
 
 			fclose(fid);
@@ -334,10 +339,11 @@ namespace multiverso
 				(clock() - start) / static_cast<double>(CLOCKS_PER_SEC));
 		}
 
-		void Distributed_wordembedding::WriteToFile(bool is_binary, std::vector<real*> &blocks, FILE* fid){
+		void Distributed_wordembedding::WriteToFile(bool is_binary, std::vector<real*> &blocks, FILE* fid, std::vector<int> &nodes){
 			for (int i = 0; i < blocks.size(); ++i)
 			{
-				fprintf(fid, "%s ", dictionary_->GetWordInfo(i)->word.c_str());
+				int id = nodes[i];
+				fprintf(fid, "%s ", dictionary_->GetWordInfo(id)->word.c_str());
 				for (int j = 0; j < option_->embeding_size; ++j)
 				{
 					if (is_binary){
@@ -359,13 +365,110 @@ namespace multiverso
 				(clock() - start) / static_cast<double>(CLOCKS_PER_SEC));
 		}
 
+		void Distributed_wordembedding::MakeBrokerAddress(){
+			std::vector<char *> result;
+			char * split_symbol_1 = "#";
+			char * split_symbol_2 = ":";
+
+			split(result, option_->broker_address, split_symbol_1);
+			for (int i = 0; i < result.size(); ++i)
+			{
+				std::vector<char *> temp_result;
+				split(temp_result, result[i], split_symbol_2);
+				broker_point_.push_back(temp_result[0]);
+				broker_port_.push_back(atoi(temp_result[1]));
+			}
+			std::cout << "make sever address done." << std::endl;
+		}
+
+		void Distributed_wordembedding::GetMachineFileAuto()
+		{
+			std::random_device rd;
+			std::mt19937 gen(rd());
+			std::uniform_int_distribution<> dis(9000,13000);
+			int result = -1;
+
+			int* rank = nullptr;
+			char** endpoint = nullptr;
+			int client_size =  option_->server_num;
+			rank = new(std::nothrow) int[option_->server_num];
+			assert(rank != nullptr);
+			endpoint = new(std::nothrow) char*[option_->server_num];
+			assert(endpoint != nullptr);
+
+			do
+			{
+				char host_name[200];
+				char local_ip[200];
+				char local_port[100];
+				local_port_ = dis(gen);
+				struct hostent *ph = nullptr;
+				WSADATA w;
+
+				WSAStartup(0x0101, &w);
+				gethostname(host_name, 256);
+				std::string hostNmae = host_name;
+				ph = gethostbyname(host_name);
+				char const *ip = inet_ntoa(*((struct in_addr *)ph->h_addr_list[0]));
+				strcpy(local_ip, ip);
+				WSACleanup();
+				strcat(local_ip, ":");
+				itoa(local_port_, local_port, 10);
+				strcat(local_ip, local_port);
+
+				result = MV_NetBind(0, local_ip);
+			} while (result!=0);
+
+			Client client(broker_point_, broker_port_, client_size, identity_, local_port_);
+			client.Start();
+			client.ParseJson(rank,endpoint);
+
+			std::cout << "start to mv netconnect..." << std::endl;
+			MV_NetConnect(rank, endpoint,option_->server_num);
+			std::cout << "has mv netconnect..." << std::endl;
+			delete []rank;
+			for (int i = 0; i < option_->server_num;i++)
+			{
+				delete[] endpoint[i];
+			}
+			delete[]endpoint;
+		}
+
+		void Distributed_wordembedding::PrintParameter(int argc, char *argv[])
+		{
+			std::cout << "parameter like that:" << std::endl;
+			for (int i = 0; i < argc; i++)
+			{
+				std::cout << "%s"<<argv[i] << std::endl;
+			}
+		}
+
+		void Distributed_wordembedding::ParseAeitherSetting(int argc, char *argv[])
+		{
+			//PrintParameter(argc,argv);
+			std::vector<char *> result;
+			const char *text = argv[argc - 4];
+			char temp[500];
+			strcpy(temp, text);
+			const char* split_symbol = "=";
+			split(result,temp,split_symbol);
+			assert(result.size()==2);
+			identity_ = std::string(result[1]);
+			std::cout << "parse aether setting done." << std::endl;
+		}
+
 		void Distributed_wordembedding::Train(int argc, char *argv[])
 		{
+			
+			ParseAeitherSetting(argc,argv);
+			MakeBrokerAddress();
+			GetMachineFileAuto();
+			
 			argc = 1;
 			argv = nullptr;
 			multiverso::MV_Init(&argc, argv);
 			multiverso::Log::Info("MV Rank %d Init done.\n",multiverso::MV_Rank());
-			
+
 			MV_Barrier();
 			multiverso::Log::Info("MV Barrier done.\n");
 			//Mark the node machine number
@@ -377,6 +480,7 @@ namespace multiverso
 			assert(communicator_ != nullptr);
 			//create worker table and server table
 			communicator_->PrepareParameterTables(dictionary_->Size(), option_->embeding_size);
+
 
 			//start to train
 			TrainNeuralNetwork();
