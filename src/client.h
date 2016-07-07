@@ -12,39 +12,36 @@
 
 
 
-namespace multiverso
+namespace wordembedding
 {
-	namespace wordembedding
-	{
-		class Client
-		{
-		public:
-			Client(std::vector<char*> server_point,std::vector<int> server_port,int client_size, std::string identity,int local_port);
-			void Start();
+  class Client
+  {
+  public:
+    Client(std::vector<char*> server_point, std::vector<int> server_port, int client_size, std::string identity, int local_port);
+    void Start();
 
-			std::string MakeJson();
-			void ParseJson(int* rank, char** endpoint);
+    std::string MakeJson();
+    void ParseJson(int* rank, char** endpoint);
 
-			int  GetResultSize();
+    int  GetResultSize();
 
-		private:
-			std::vector<char*> server_point_;
-			std::vector<int> server_port_;
-			int local_port_;
+  private:
+    std::vector<char*> server_point_;
+    std::vector<int> server_port_;
+    int local_port_;
 
-			int client_size_;
-			std::string identity_;
-			std::vector<std::string> result_;
+    int client_size_;
+    std::string identity_;
+    std::vector<std::string> result_;
 
-			unsigned long GetServerIP(char* end_point);
+    unsigned long GetServerIP(char* end_point);
 
-			void Connect(SOCKET &sock, char* end_point, int port);
-			
-			void SendMessages(SOCKET &sock,std::string message);
+    void Connect(SOCKET &sock, char* end_point, int port);
 
-			void ReceiveMessages(PVOID param);
-		};
-	}
+    void SendMessages(SOCKET &sock, std::string message);
+
+    void ReceiveMessages(PVOID param);
+  };
 }
 
 #endif
