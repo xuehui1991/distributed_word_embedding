@@ -422,7 +422,8 @@ namespace wordembedding {
     GetMachineFileAuto();
     argc = 1;
     argv = nullptr;
-    multiverso::MV_Init(&argc, argv);
+    //multiverso::MV_Init(&argc, argv);
+	multiverso::MV_Init();
     multiverso::Log::Info("MV Rank %d Init done.\n", multiverso::MV_Rank());
 
     multiverso::MV_Barrier();
