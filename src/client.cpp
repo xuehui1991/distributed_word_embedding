@@ -27,7 +27,7 @@ namespace wordembedding
     }
 
     std::vector<SOCKET> socket_list;
-    std::vector<std::thread> thread_pool;
+    //std::vector<std::thread> thread_pool;
     int broker_number = server_point_.size();
     for (int i = 0; i < broker_number; i++)
     {
@@ -56,9 +56,10 @@ namespace wordembedding
       std::string message = MakeJson();
       std::cout << message << std::endl;
       SendMessages(socket_list[i], message);
-      thread_pool.push_back(std::thread(&Client::ReceiveMessages,
-        this, &socket_list[i]));
-      thread_pool[i].join();
+      //thread_pool.push_back(std::thread(&Client::ReceiveMessages,
+        //this, &socket_list[i]));
+      //thread_pool[i].join();
+	  ReceiveMessages(&socket_list[i]);
     }
 
     std::cout << "result size = " << result_.size() << std::endl;
@@ -81,6 +82,7 @@ namespace wordembedding
 
   void  Client::ReceiveMessages(PVOID param)
   {
+	std::cout << "receive message function..." << std::endl;
     char buf[5000];
 
     SOCKET* sock = (SOCKET*)param;

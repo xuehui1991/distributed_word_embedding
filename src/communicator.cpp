@@ -19,8 +19,11 @@ namespace wordembedding {
     worker_output_table_ = new multiverso::MatrixWorkerTable<real>(row_size, column_size);
     server_input_table_ = new multiverso::MatrixServerTable<real>(row_size, column_size, -0.5f / embedding_size, 0.5f / embedding_size);
     server_output_table_ = new multiverso::MatrixServerTable<real>(row_size, column_size);
-    worker_wordcount_table_ = new multiverso::KVWorkerTable<int, int64>();
-    server_wordcount_table_ = new multiverso::KVServerTable<int, int64>();
+
+	multiverso::KVTableOption<int, int64> option1;
+	multiverso::KVTableOption<int, int64> option2;
+    worker_wordcount_table_ = MV_CreateTable(option1);
+    //server_wordcount_table_ = MV_CreateTable(option2);
 
     if (option_->use_adagrad){
       worker_input_gradient_table_ = new multiverso::MatrixWorkerTable<real>(row_size, column_size);
@@ -36,7 +39,7 @@ namespace wordembedding {
     delete server_input_table_;
     delete server_output_table_;
     delete worker_wordcount_table_;
-    delete server_wordcount_table_;
+    //delete server_wordcount_table_;
 
     if (option_->use_adagrad){
       delete worker_input_gradient_table_;
@@ -49,16 +52,34 @@ namespace wordembedding {
   inline void Communicator::AddRows(multiverso::MatrixWorkerTable<real>* table,
     std::vector<int> &row_ids, std::vector<real *> &ptrs, int size) {
     multiverso::AddOption add_option;
+
+	if (row_ids.size() == 0)
+	{
+		std::cout << "AddRows 0 is here... " << std::endl;
+		return;
+	}
     table->Add(row_ids, ptrs, size, &add_option);
   }
 
   void Communicator::GetWorkerTableRows(std::vector<int> &row_nums,
     std::vector<real*> &blocks, int embeding_size) {
+
+	  if (row_nums.size() == 0)
+	  {
+		  std::cout << "GetWorkerTableRows 0 is here... " << std::endl;
+		  return;
+	  }
     worker_input_table_->Get(row_nums, blocks, embeding_size);
   }
 
   inline void Communicator::GetRows(multiverso::MatrixWorkerTable<real>* table,
     std::vector<int> &row_ids, std::vector<real *> &ptrs, int size) {
+
+	  if(row_ids.size()==0)
+	  {
+		  std::cout << "GetRows 0 is here... " << std::endl;
+		  return;
+	  }
     table->Get(row_ids, ptrs, size);
   }
 
@@ -110,6 +131,14 @@ namespace wordembedding {
       data_block->output_nodes.end());
     std::vector<real*> input_blocks;
     std::vector<real*> output_blocks;
+
+	/*
+	if(input_nodes.size()==0 || output_nodes.size()==0)
+	{
+		std::cout << "0 is here... " << std::endl;
+		return;
+	}
+	*/
 
     //Request blocks to store parameters
     memory_mamanger_->RequestBlocks(data_block->input_nodes.size(),
@@ -191,6 +220,7 @@ namespace wordembedding {
 
   //Add delta to local buffer and send it to the parameter sever
   void Communicator::AddDeltaParameter(DataBlock *data_block){
+	  multiverso::Log::Info("begin to add delta parameter.\n");
     if (data_block == nullptr) {
       multiverso::Log::Info("Rank %d has null DataBlcok.\n", process_id_);
       return;
@@ -202,6 +232,15 @@ namespace wordembedding {
 
     std::vector<int> input_nodes(data_block->input_nodes.begin(), data_block->input_nodes.end());
     std::vector<int> output_nodes(data_block->output_nodes.begin(), data_block->output_nodes.end());
+
+	/*
+	if (input_nodes.size() == 0 || output_nodes.size() == 0)
+	{
+		std::cout << "0 is here... " << std::endl;
+		return;
+	}
+	*/
+
     std::vector<real*> input_blocks;
     std::vector<real*> output_blocks;
     //Request blocks to store parameters

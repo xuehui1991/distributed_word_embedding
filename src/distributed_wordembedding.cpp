@@ -29,9 +29,22 @@ namespace wordembedding {
       (clock() - start) / static_cast<double>(CLOCKS_PER_SEC));
   }
 
+  void DistributedWordembedding::StartLoadDataThreadFake(int a, int b) {
+	  std::cout << a << ' ' << b << ' ' << __FILE__ << ' ' << __LINE__ << std::endl;
+  }
+
   //start the load data thread
-  void DistributedWordembedding::StartLoadDataThread(Reader *reader, 
-    int64 file_size) {
+  //void DistributedWordembedding::StartLoadDataThread(Reader *reader, 
+    //int64 file_size) {
+  void DistributedWordembedding::StartLoadDataThread() {
+	  Reader *reader = reader_;
+	  int64 file_size = file_size_;
+
+	  if (reader == nullptr)
+	  {
+		  std::cout << "reader is null" << std::endl;
+		  return;
+	  }
     for (int cur_epoch = 0; cur_epoch < option_->epoch; ++cur_epoch) {
       reader->ResetStart();
       for (int64 cur = 0; cur < file_size; cur += option_->data_block_size) {
@@ -40,7 +53,7 @@ namespace wordembedding {
         LoadOneBlock(data_block, reader, option_->data_block_size);
         block_queue_->Push(data_block);
 
-        //control the proload data
+		//control the proload data
         while (static_cast<int64>(block_queue_->GetQueueSize()) *
           option_->data_block_size > option_->max_preload_data_size) {
           std::chrono::milliseconds dura(200);
@@ -48,6 +61,7 @@ namespace wordembedding {
         }
       }
     }
+
 
     DataBlock *data_block = new (std::nothrow)DataBlock();
     assert(data_block != nullptr);
@@ -145,13 +159,13 @@ namespace wordembedding {
   }
 
   void DistributedWordembedding::TrainNeuralNetwork() {
-    int64 file_size = GetFileSize(option_->train_file);
-    multiverso::Log::Info("train-file-size:%lld, data_block_size:%lld\n",
-      file_size, option_->data_block_size);
 
-    block_queue_ = new BlockQueue();
-    load_data_thread_ = std::thread(&DistributedWordembedding::StartLoadDataThread,
-      this, reader_, file_size);
+    file_size_ = GetFileSize(option_->train_file);
+	int64 file_size = file_size_;
+	//int64 file_size_ = GetFileSize(option_->train_file);
+    
+	multiverso::Log::Info("train-file-size:%lld, data_block_size:%lld\n",
+      file_size_, option_->data_block_size);
 
     WordEmbedding_ = new WordEmbedding(option_, huffman_encoder_, sampler_,
       dictionary_->Size());
@@ -163,6 +177,9 @@ namespace wordembedding {
       assert(trainers_[i] != nullptr);
     }
 
+	block_queue_ = new BlockQueue();
+	load_data_thread_ = std::thread(&DistributedWordembedding::StartLoadDataThread,this);
+	
     start_ = clock();
     int data_block_count = 0;
     DataBlock *next_block = nullptr;
@@ -231,9 +248,8 @@ namespace wordembedding {
 
       if (cur_epoch == option_->epoch - 1) {
         multiverso::MV_Barrier();
-        //if (process_id_ == 0) {
-          SaveEmbedding(option_->output_file, option_->output_binary);
-        //}
+        SaveEmbedding(option_->output_file, option_->output_binary);
+		multiverso::MV_Barrier();
       }
     }
 
@@ -275,7 +291,7 @@ namespace wordembedding {
       fid = fopen(file_path, "wt");
     fprintf(fid, "%d %d\n", dictionary_->Size(), option_->embeding_size);
 
-    if (process_id_==0){
+    if (option_->rank_num == 0){
       for (int i = 0; i < epoch; ++i) {
         for (int j = 0; j < kSaveBatch; ++j) {
           nodes.push_back(base + j);
@@ -404,7 +420,7 @@ namespace wordembedding {
     std::vector<char *> result;
     char * split_symbol_1 = "#";
     char * split_symbol_2 = ":";
-
+	
     split(result, option_->broker_address, split_symbol_1);
     for (int i = 0; i < result.size(); ++i)
     {
@@ -442,10 +458,10 @@ namespace wordembedding {
     //start to train
     TrainNeuralNetwork();
 
+	delete communicator_;
+	delete memory_mamanger_;
     multiverso::MV_ShutDown();
     multiverso::Log::Info("MV ShutDone done.\n");
-    delete communicator_;
-    delete memory_mamanger_;
   }
 
   void DistributedWordembedding::Run(int argc, char *argv[]) {
@@ -521,7 +537,14 @@ namespace wordembedding {
       }
       int word_freq;
       while (fscanf(fid, "%s %d", word, &word_freq) != EOF) {
-        dictionary->Insert(word, word_freq);
+		  if(std::strlen(word)<=100)
+		  {
+			  dictionary->Insert(word, word_freq);
+		  }else
+		  {
+			  std::cout << word << std::endl;
+		  }
+		 
       }
     }
 

@@ -14,22 +14,22 @@
 
 using namespace std;
 
-void display_map(map<string, int> &wmap, FILE * file_,Option * option_)
+void display_map(map<string, int> &wmap, FILE * file_, Option * option_)
 {
 	map<string, int>::const_iterator map_it;
 	for (map_it = wmap.begin(); map_it != wmap.end(); map_it++)
 	{
-		if (map_it->second >= option_->min_count) 
+		if (map_it->second >= option_->min_count)
 		{
 			fprintf(file_, "%s   %d\n", (map_it->first).c_str(), map_it->second);
 		}
-	
+
 	}
 }
 
 int main(int argc, char *argv[])
 {
-	Option *option_= new Option();
+	Option *option_ = new Option();
 	FILE * output_file;
 	option_->ParseArgs(argc, argv);
 	output_file = fopen(option_->save_vocab_file, "w");
@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
 	while (ifs >> szTemp)
 		wmap[szTemp]++;
 
-	display_map(wmap,output_file,option_);
+	display_map(wmap, output_file, option_);
 
 	return false;
 }

@@ -56,6 +56,7 @@ namespace wordembedding {
     char* local_point_ = nullptr;
     std::vector<int> broker_port_;
     int local_port_ = 0;
+	int64 file_size_ = 0;
 
     /*!
     * \brief Load Dictionary from the vocabulary_file
@@ -71,7 +72,9 @@ namespace wordembedding {
 
     void PrepareData(DataBlock *data_block);
 
-    void StartLoadDataThread(Reader *reader, int64 file_size);
+    //void StartLoadDataThread(Reader *reader, int64 file_size);
+	void StartLoadDataThread();
+	void StartLoadDataThreadFake(int a, int b);
     void LoadOneBlock(DataBlock *data_block,
       Reader *reader, int64 size);
 

@@ -35,6 +35,7 @@ namespace wordembedding
     real init_learning_rate;
     int server_num;
     char *broker_address;
+	int rank_num;
 
     Option();
     /*!

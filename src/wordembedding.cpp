@@ -208,6 +208,21 @@ namespace wordembedding {
         data_block->negativesample_pools.insert(target);
       }
     }
+	/*
+	std::cout << "input_node  "<<std::endl;
+	for (auto input_node : data_block->input_nodes) {
+		std::cout << input_node;
+		std::cout << "    ";
+	}
+	std::cout << "  "<<std::endl;
+
+	std::cout << "output_node  " << std::endl;
+	for (auto output_node : data_block->output_nodes) {
+		std::cout << output_node;
+		std::cout << "    ";
+	}
+	std::cout << "  " << std::endl;
+	*/
   }
 
   //Parse the sentence and deepen into two branches

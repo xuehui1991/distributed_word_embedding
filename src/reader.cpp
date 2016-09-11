@@ -22,7 +22,7 @@ namespace wordembedding {
       fclose(fid);
     }
 
-    file_ = fopen(input_file, "r");
+    file_ = fopen(input_file, "rb");
     if (file_ == nullptr) {
       multiverso::Log::Fatal("Open train_file failed!\n");
       exit(1);
@@ -30,6 +30,7 @@ namespace wordembedding {
   }
 
   Reader::~Reader() {
+	  std::cout << "close reader" << std::endl;
     if (file_ != nullptr)
       fclose(file_);
   }
@@ -37,6 +38,11 @@ namespace wordembedding {
   int Reader::GetSentence(int *sentence, int64 &word_count) {
     int length = 0, word_idx;
     word_count = 0;
+
+	//long size = ftell(file_);
+	//std::cout << "file size position ";
+	//std::cout << size << std::endl;
+
     while (1) {
       if (!ReadWord(word_, file_))
         break;
@@ -71,8 +77,17 @@ namespace wordembedding {
   bool Reader::ReadWord(char *word, FILE *fin) {
     int idx = 0;
     char ch;
-    while (!feof(fin) && byte_count_ < byte_size_) {
-      ch = fgetc(fin);
+
+    //while (!feof(fin) && byte_count_ < byte_size_) {
+	while (byte_count_ < byte_size_) {
+      //ch = fgetc(fin);
+	  int cnt = fread(&ch, 1,1, fin);
+	  if(cnt==0)
+	  {
+		  //std::cout << "EOF is here. " << (int)ch << std::endl;
+		  break;
+	  }
+
       ++byte_count_;
       if (ch == 13) continue;
       if ((ch == ' ') || (ch == '\t') || (ch == '\n')) {

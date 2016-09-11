@@ -43,7 +43,7 @@ namespace wordembedding {
     multiverso::MatrixServerTable<real>* server_output_gradient_table_ = nullptr;
 
     multiverso::KVWorkerTable<int, int64>* worker_wordcount_table_ = nullptr;
-    multiverso::KVServerTable<int, int64>* server_wordcount_table_ = nullptr;
+    //multiverso::KVServerTable<int, int64>* server_wordcount_table_ = nullptr;
 
     void ClearParameterTables();
 

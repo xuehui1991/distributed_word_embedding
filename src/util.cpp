@@ -29,6 +29,7 @@ namespace wordembedding
     use_adagrad = false;
     server_num = 0;
     broker_address = nullptr;
+	rank_num = 0;
   }
   //Input all the local model-arguments 
   void Option::ParseArgs(int argc, char* argv[])
@@ -58,6 +59,7 @@ namespace wordembedding
       if (strcmp(argv[i], "-is_pipeline") == 0) is_pipeline = (atoi(argv[i + 1]) != 0);
       if (strcmp(argv[i], "-server_num") == 0) server_num = atoi(argv[i + 1]);
       if (strcmp(argv[i], "-broker_address") == 0) broker_address = argv[i + 1];
+	  if (strcmp(argv[i], "-rank_num") == 0) rank_num = atoi(argv[i + 1]);
     }
   }
 
@@ -87,6 +89,7 @@ namespace wordembedding
     puts("-is_pipeline : 0 or 1, whether to use pipeline");
     puts("-server_endpoint_file : default "", server ZMQ socket endpoint file in MPI - free version");
     puts("-broker address: the server address to tell every machine rank and address");
+	puts("-rank num: represent the fake number of rank");
   }
 
   void Option::PrintArgs()
@@ -115,6 +118,7 @@ namespace wordembedding
     multiverso::Log::Info("endpoints_file: %s\n", endpoints_file);
     multiverso::Log::Info("server number: %d\n", server_num);
     multiverso::Log::Info("broker address: %s\n", broker_address);
+	multiverso::Log::Info("rank number: %d\n", rank_num);
   }
 
   Sampler::Sampler()
