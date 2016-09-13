@@ -25,6 +25,8 @@ namespace wordembedding {
       }
     }
 
+	multiverso::Log::Info("load one data block which size is %lld\n", data_block->Size());
+
     multiverso::Log::Info("Rank %d LoadOneDataBlockTime:%lfs\n", process_id_,
       (clock() - start) / static_cast<double>(CLOCKS_PER_SEC));
   }
@@ -75,7 +77,9 @@ namespace wordembedding {
   }
 
   DataBlock* DistributedWordembedding::GetBlockAndPrepareParameter() {
+	multiverso::Log::Info("begin to GetBlockAndPrepareParameter");
     DataBlock* data_block = GetDataFromQueue();
+	multiverso::Log::Info("get data block from queue which size is %lld\n", data_block->Size());
     if (data_block->Size() == 0) {
       return data_block;
     }
@@ -120,6 +124,7 @@ namespace wordembedding {
         WordEmbedding_->UpdateLearningRate();
         total_word_count = sum;
         if (!option_->use_adagrad) {
+		/*
           multiverso::Log::Info("Rank %d Alpha: %lf Progress: %.2lf%% \
                                 WordCountActual:%lld Words/thread/second %lfk\n",
                                 multiverso::MV_Rank(), WordEmbedding_->learning_rate,
@@ -128,8 +133,10 @@ namespace wordembedding {
                                 WordEmbedding_->word_count_actual,
                                 total_word_count / (static_cast<double>(option_->thread_cnt)\
                                 * (clock() - start_) / CLOCKS_PER_SEC * 1000.0));
+		*/
         }
         else {
+			/*
           multiverso::Log::Info("Rank %d Progress: %.2lf%% WordCountActual: \
                                 %lld Words/thread/second %lfk\n",
                                 multiverso::MV_Rank(),
@@ -138,6 +145,7 @@ namespace wordembedding {
                                 WordEmbedding_->word_count_actual,
                                 total_word_count / (static_cast<double>(option_->thread_cnt)\
                                 * (clock() - start_) / CLOCKS_PER_SEC * 1000.0));
+								*/
         }
       }
     }
@@ -530,19 +538,19 @@ namespace wordembedding {
     if (opt->read_vocab_file != nullptr && strlen(opt->read_vocab_file) > 0) {
       multiverso::Log::Info("Begin to load vocabulary file [%s] ...\n",
         opt->read_vocab_file);
-      fid = fopen(opt->read_vocab_file, "r");
+      fid = fopen(opt->read_vocab_file, "rb");
       if (fid == nullptr) {
         multiverso::Log::Fatal("Open vocab_file failed!\n");
         exit(1);
       }
       int word_freq;
       while (fscanf(fid, "%s %d", word, &word_freq) != EOF) {
-		  if(std::strlen(word)<=100)
+		  if(std::strlen(word)<100)
 		  {
 			  dictionary->Insert(word, word_freq);
 		  }else
 		  {
-			  std::cout << word << std::endl;
+			  //std::cout << "word len is longer than 500" << word << std::endl;
 		  }
 		 
       }

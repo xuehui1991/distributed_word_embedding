@@ -38,7 +38,8 @@ int main(int argc, char *argv[])
 	map<string, int> wmap;
 
 	while (ifs >> szTemp)
-		wmap[szTemp]++;
+		if(szTemp.size()<100)
+			wmap[szTemp]++;
 
 	display_map(wmap, output_file, option_);
 

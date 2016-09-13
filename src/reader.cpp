@@ -84,7 +84,7 @@ namespace wordembedding {
 	  int cnt = fread(&ch, 1,1, fin);
 	  if(cnt==0)
 	  {
-		  //std::cout << "EOF is here. " << (int)ch << std::endl;
+		  std::cout << "EOF is here. " << (int)ch << std::endl;
 		  break;
 	  }
 
